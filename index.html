@@ -3,11 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nabz</title>
+<title>Nabz — Gaming Content Creator</title>
 <meta name="description" content="Nabz — gaming content creator. Watch on YouTube and Twitch, follow on TikTok and Instagram.">
 <meta name="theme-color" content="#0a0806">
 
-<!-- Open Graph / Twitter Meta -->
 <meta property="og:type" content="profile">
 <meta property="og:title" content="Nabz">
 <meta property="og:description" content="Gaming content creator. Twitch, YouTube, TikTok, Instagram.">
@@ -20,80 +19,189 @@
 <link rel="icon" type="image/png" href="assets/mascot-neutral.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
+<!-- ============ PRELOADER ============ -->
+<div class="preloader" id="preloader">
+  <div class="preloader__inner">
+    <div class="preloader__ring">
+      <img src="assets/mascot-neutral.png" alt="" class="preloader__mascot" onerror="this.style.display='none'">
+    </div>
+    <div class="preloader__bar"><div class="preloader__fill" id="preloader-fill"></div></div>
+    <p class="preloader__text" id="preloader-text">Booting chaos…</p>
+  </div>
+</div>
+
+<!-- ============ CUSTOM CURSOR ============ -->
+<div class="cursor-dot" id="cursor-dot" aria-hidden="true"></div>
+<div class="cursor-ring" id="cursor-ring" aria-hidden="true"></div>
+
+<!-- ============ SCROLL PROGRESS ============ -->
+<div class="scroll-progress" id="scroll-progress" aria-hidden="true"></div>
+
+<!-- ============ BACKGROUND LAYERS ============ -->
 <canvas id="bg-fx" aria-hidden="true"></canvas>
+<div class="grid-overlay" aria-hidden="true"></div>
+<div class="scanlines" aria-hidden="true"></div>
+<div class="vignette" aria-hidden="true"></div>
+
+<!-- ============ SOUND TOGGLE ============ -->
+<button class="sound-toggle" id="sound-toggle" aria-label="Toggle sound effects" aria-pressed="false">
+  <svg class="sound-toggle__on" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4zM14 3.2v2.1a7 7 0 0 1 0 13.4v2.1a9 9 0 0 0 0-17.6z"/></svg>
+  <svg class="sound-toggle__off" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v6h4l5 5V4L7 9H3zm18.5 3-2.5-2.5L16.5 12 14 9.5 11.5 12 14 14.5 11.5 17l2.5 2.5L16.5 17l2.5 2.5L21.5 17 19 14.5z"/></svg>
+</button>
 
 <main class="page">
 
+  <!-- ============ HERO ============ -->
   <section class="hero">
     <div class="hero__glow" aria-hidden="true"></div>
-    
-    <div class="mascot-container">
-      <div class="mascot-speech" id="mascot-speech" aria-live="polite"></div>
-      <img class="hero__mascot" id="hero-mascot" src="assets/mascot-neutral.png" alt="Nabz mascot — click to react" width="220" height="220" tabindex="0" role="button">
+    <div class="hero__orbit" aria-hidden="true">
+      <span class="hero__orbit-dot"></span>
+      <span class="hero__orbit-dot"></span>
+      <span class="hero__orbit-dot"></span>
     </div>
 
-    <h1 class="hero__name">Nabz</h1>
-    <p class="hero__bio">Gaming content, mostly chaos.<br>Streaming on Twitch, uploading on YouTube.</p>
+    <div class="mascot-container" id="mascot-container">
+      <div class="mascot-speech" id="mascot-speech" aria-live="polite"></div>
+      <div class="mascot-ring" aria-hidden="true"></div>
+      <img class="hero__mascot" id="hero-mascot"
+           src="assets/mascot-neutral.png"
+           alt="Nabz mascot — click to react"
+           width="220" height="220" tabindex="0" role="button">
+      <canvas class="burst-canvas" id="burst-canvas" aria-hidden="true"></canvas>
+    </div>
 
+    <h1 class="hero__name" id="hero-name">Nabz</h1>
+    <p class="hero__bio">
+      Gaming content, mostly chaos.<br>
+      Streaming on <span class="hl">Twitch</span>, uploading on <span class="hl">YouTube</span>.
+    </p>
+
+    <!-- STATS -->
+    <div class="stats-row" aria-label="Quick stats">
+      <div class="stat">
+        <span class="stat__num" data-count="4">0</span>
+        <span class="stat__label">Platforms</span>
+      </div>
+      <div class="stat">
+        <span class="stat__num" data-count="24" data-suffix="/7">0</span>
+        <span class="stat__label">Chaos</span>
+      </div>
+      <div class="stat">
+        <span class="stat__num" data-count="3" data-suffix="+">0</span>
+        <span class="stat__label">XTC Crew</span>
+      </div>
+    </div>
+
+    <!-- SOCIALS -->
     <nav class="social-row" aria-label="Social links">
-      <a class="social-pill social-pill--twitch" href="https://www.twitch.tv/nabz732" target="_blank" rel="noopener">
+      <a class="social-pill social-pill--twitch" data-magnetic data-sound="hover" href="https://www.twitch.tv/nabz732" target="_blank" rel="noopener">
+        <span class="social-pill__glow"></span>
         <svg viewBox="0 0 24 24" class="social-pill__icon" aria-hidden="true"><path d="M4 2 2 6.5V20h5.5V22.5L10 20h4L20.5 13.5V2ZM18.5 12.5 15.5 15.5H11L8.5 18V15.5H4.5V4H18.5Z M14.5 7H16.5V12H14.5Z M9.5 7H11.5V12H9.5Z"/></svg>
-        <span>Twitch</span>
+        <span class="social-pill__text">Twitch</span>
+        <span class="social-pill__arrow" aria-hidden="true">↗</span>
       </a>
-      <a class="social-pill social-pill--yt" href="https://www.youtube.com/@Nabz.7327" target="_blank" rel="noopener">
+      <a class="social-pill social-pill--yt" data-magnetic data-sound="hover" href="https://www.youtube.com/@Nabz.7327" target="_blank" rel="noopener">
+        <span class="social-pill__glow"></span>
         <svg viewBox="0 0 24 24" class="social-pill__icon" aria-hidden="true"><path d="M22 12s0-3.4-.4-5a2.6 2.6 0 0 0-1.9-1.9C18 4.7 12 4.7 12 4.7s-6 0-7.7.4A2.6 2.6 0 0 0 2.4 7C2 8.6 2 12 2 12s0 3.4.4 5a2.6 2.6 0 0 0 1.9 1.9c1.7.4 7.7.4 7.7.4s6 0 7.7-.4A2.6 2.6 0 0 0 21.6 17c.4-1.6.4-5 .4-5ZM10 15.3V8.7L15.8 12Z"/></svg>
-        <span>YouTube</span>
+        <span class="social-pill__text">YouTube</span>
+        <span class="social-pill__arrow" aria-hidden="true">↗</span>
       </a>
-      <a class="social-pill social-pill--tiktok" href="https://www.tiktok.com/@nabz.732" target="_blank" rel="noopener">
+      <a class="social-pill social-pill--tiktok" data-magnetic data-sound="hover" href="https://www.tiktok.com/@nabz.732" target="_blank" rel="noopener">
+        <span class="social-pill__glow"></span>
         <svg viewBox="0 0 24 24" class="social-pill__icon" aria-hidden="true"><path d="M16.5 2h-3v13.6a2.8 2.8 0 1 1-2.2-2.7v-3a5.8 5.8 0 1 0 5.2 5.8V8.9a7 7 0 0 0 4.2 1.4V7.3A4 4 0 0 1 16.5 2Z"/></svg>
-        <span>TikTok</span>
+        <span class="social-pill__text">TikTok</span>
+        <span class="social-pill__arrow" aria-hidden="true">↗</span>
       </a>
-      <a class="social-pill social-pill--ig" href="https://www.instagram.com/nabzzz732/" target="_blank" rel="noopener">
+      <a class="social-pill social-pill--ig" data-magnetic data-sound="hover" href="https://www.instagram.com/nabzzz732/" target="_blank" rel="noopener">
+        <span class="social-pill__glow"></span>
         <svg viewBox="0 0 24 24" class="social-pill__icon" aria-hidden="true"><path d="M8 2h8a6 6 0 0 1 6 6v8a6 6 0 0 1-6 6H8a6 6 0 0 1-6-6V8a6 6 0 0 1 6-6Zm0 2a4 4 0 0 0-4 4v8a4 4 0 0 0 4 4h8a4 4 0 0 0 4-4V8a4 4 0 0 0-4-4Zm4 3.5A4.5 4.5 0 1 1 7.5 12 4.5 4.5 0 0 1 12 7.5Zm0 2A2.5 2.5 0 1 0 14.5 12 2.5 2.5 0 0 0 12 9.5ZM17.8 6a1 1 0 1 1-1-1 1 1 0 0 1 1 1Z"/></svg>
-        <span>Instagram</span>
+        <span class="social-pill__text">Instagram</span>
+        <span class="social-pill__arrow" aria-hidden="true">↗</span>
       </a>
     </nav>
   </section>
 
+  <!-- ============ MARQUEE ============ -->
+  <div class="marquee" aria-hidden="true">
+    <div class="marquee__track">
+      <span>NOW STREAMING ON TWITCH</span><span class="marquee__star">✦</span>
+      <span>NEW VIDEO DROPS WEEKLY</span><span class="marquee__star">✦</span>
+      <span>JOIN THE XTC DISCORD</span><span class="marquee__star">✦</span>
+      <span>FOLLOW FOR CHAOS</span><span class="marquee__star">✦</span>
+      <span>NOW STREAMING ON TWITCH</span><span class="marquee__star">✦</span>
+      <span>NEW VIDEO DROPS WEEKLY</span><span class="marquee__star">✦</span>
+      <span>JOIN THE XTC DISCORD</span><span class="marquee__star">✦</span>
+      <span>FOLLOW FOR CHAOS</span><span class="marquee__star">✦</span>
+    </div>
+  </div>
+
+  <!-- ============ HUB ============ -->
   <section class="hub" aria-label="Latest content">
-    <div class="lenses">
-      <div class="lens lens--left">
-        <p class="lens__eyebrow">Latest upload</p>
+    <div class="lenses" data-tilt-group>
+
+      <div class="lens lens--left" data-tilt data-reveal>
+        <span class="lens__shine" aria-hidden="true"></span>
+        <p class="lens__eyebrow">
+          <span class="lens__eyebrow-dot lens__eyebrow-dot--yt"></span>
+          Latest upload
+        </p>
         <div id="yt-body" class="lens__body">
-          <div class="skeleton-loader"></div>
-          <p class="lens__loading">Scanning YouTube...</p>
+          <div class="yt-skeleton">
+            <div class="yt-skeleton__thumb"></div>
+            <div class="yt-skeleton__line"></div>
+            <div class="yt-skeleton__line yt-skeleton__line--short"></div>
+          </div>
         </div>
       </div>
-      <div class="lens__bridge" aria-hidden="true"></div>
-      <div class="lens lens--right">
-        <p class="lens__eyebrow">Twitch <span id="live-badge" class="live-badge" hidden><span class="live-badge__dot"></span>LIVE</span></p>
+
+      <div class="lens__bridge" aria-hidden="true">
+        <span class="lens__bridge-pulse"></span>
+      </div>
+
+      <div class="lens lens--right" data-tilt data-reveal>
+        <span class="lens__shine" aria-hidden="true"></span>
+        <p class="lens__eyebrow">
+          <span class="lens__eyebrow-dot lens__eyebrow-dot--twitch"></span>
+          Twitch
+          <span id="live-badge" class="live-badge" hidden>
+            <span class="live-badge__dot"></span>LIVE
+          </span>
+        </p>
         <div class="lens__body lens__body--twitch">
           <div id="twitch-embed"></div>
-          <a class="twitch-fallback" href="https://www.twitch.tv/nabz732" target="_blank" rel="noopener">Watch on Twitch</a>
+          <a class="twitch-fallback" data-sound="hover" href="https://www.twitch.tv/nabz732" target="_blank" rel="noopener">
+            <span>Watch on Twitch</span>
+            <span class="twitch-fallback__arrow" aria-hidden="true">→</span>
+          </a>
         </div>
       </div>
+
     </div>
   </section>
 
+  <!-- ============ XTC ============ -->
   <section class="xtc" aria-label="XTC group">
-    <div class="xtc__inner">
+    <div class="xtc__inner" data-reveal>
       <p class="xtc__label">Part of</p>
-      <h2 class="xtc__name">XTC</h2>
+      <h2 class="xtc__name" data-scramble>XTC</h2>
       <p class="xtc__blurb">A small content group — gaming now, IRL content coming later. Three of us right now, a fourth joining soon.</p>
-      <a class="xtc__discord" href="https://discord.gg/X2vR78dcw" target="_blank" rel="noopener">
+      <a class="xtc__discord" data-magnetic data-sound="hover" href="https://discord.gg/X2vR78dcw" target="_blank" rel="noopener">
+        <span class="xtc__discord-glow"></span>
         <svg viewBox="0 0 24 24" class="xtc__discord-icon" aria-hidden="true"><path d="M20 6.5a17 17 0 0 0-4.3-1.3l-.2.4a15 15 0 0 1 3.8 1.3 15.8 15.8 0 0 0-14.6 0 15 15 0 0 1 3.9-1.3l-.2-.4A17 17 0 0 0 4 6.5C1.7 10 1 13.4 1.3 16.7a17 17 0 0 0 5.1 2.6l.7-1.1a11 11 0 0 1-1.7-.8l.4-.3a12.4 12.4 0 0 0 10.4 0l.4.3a11 11 0 0 1-1.7.8l.7 1.1a17 17 0 0 0 5.1-2.6C23 13.4 22.3 10 20 6.5ZM9 14.6c-.9 0-1.6-.8-1.6-1.8S8.1 11 9 11s1.6.8 1.6 1.8-.7 1.8-1.6 1.8Zm6 0c-.9 0-1.6-.8-1.6-1.8S14.1 11 15 11s1.6.8 1.6 1.8-.7 1.8-1.6 1.8Z"/></svg>
-        Join the Discord
+        <span>Join the Discord</span>
       </a>
+      <p class="xtc__hint" aria-hidden="true">psst… try the konami code ↑↑↓↓←→←→BA</p>
     </div>
   </section>
 
   <footer class="footer">
-    <img class="footer__mascot" src="assets/mascot-spiky.png" alt="" width="48" height="48">
-    <p>Nabz · updated <span id="year"></span></p>
+    <img class="footer__mascot" src="assets/mascot-spiky.png" alt="" width="48" height="48" onerror="this.style.display='none'">
+    <p>Nabz · <span class="footer__mono">©</span> <span id="year"></span></p>
   </footer>
 
 </main>
