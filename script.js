@@ -6,8 +6,6 @@ const TWITCH_CHANNEL = "nabz732";
 document.getElementById("year").textContent = new Date().getFullYear();
 
 // ---- Latest YouTube video ----
-// YouTube's RSS feed doesn't send CORS headers, so we go through rss2json
-// (free, no key needed for light traffic) to turn it into fetchable JSON.
 async function loadLatestVideo() {
   const feedUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${YT_CHANNEL_ID}`;
   const proxyUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feedUrl)}`;
@@ -28,9 +26,16 @@ async function loadLatestVideo() {
 
     body.innerHTML = `
       <a class="yt-card" href="${item.link}" target="_blank" rel="noopener">
-        <img class="yt-card__thumb" src="${thumb}" alt="" loading="lazy">
+        <div class="yt-card__thumb-wrapper">
+          <img class="yt-card__thumb" src="${thumb}" alt="" loading="lazy">
+          <div class="yt-card__play-overlay">
+            <div class="yt-card__play-icon">
+              <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            </div>
+          </div>
+        </div>
         <p class="yt-card__title">${escapeHtml(item.title)}</p>
-        <span class="yt-card__link">Watch on YouTube →</span>
+        <span class="yt-card__link">Watch on YouTube</span>
       </a>
     `;
   } catch (err) {
@@ -50,8 +55,6 @@ function escapeHtml(str) {
 loadLatestVideo();
 
 // ---- Twitch embed ----
-// Uses Twitch's official embed widget so live/offline status is handled
-// automatically without needing an authenticated API call.
 function loadTwitchEmbed() {
   const container = document.getElementById("twitch-embed");
   const liveBadge = document.getElementById("live-badge");
@@ -86,28 +89,44 @@ function loadTwitchEmbed() {
 
 loadTwitchEmbed();
 
-// ---- Mascot click-to-react ----
+// ---- Mascot click-to-react with Speech Bubble ----
 function initMascotReactions() {
   const mascot = document.getElementById("hero-mascot");
+  const speech = document.getElementById("mascot-speech");
   if (!mascot) return;
 
   const expressions = [
-    { file: "mascot-neutral.png", label: "Nabz mascot — click to react" },
-    { file: "mascot-shocked.png", label: "Nabz mascot, shocked" },
-    { file: "mascot-angry.png", label: "Nabz mascot, annoyed" },
-    { file: "mascot-spiky.png", label: "Nabz mascot, smug" },
-    { file: "mascot-extra.png", label: "Nabz mascot, confused" },
+    { file: "mascot-neutral.png", label: "Nabz mascot — click to react", phrase: "Yo! What's good?" },
+    { file: "mascot-shocked.png", label: "Nabz mascot, shocked", phrase: "CHAT IS THIS REAL?!" },
+    { file: "mascot-angry.png", label: "Nabz mascot, annoyed", phrase: "Bro... not again." },
+    { file: "mascot-spiky.png", label: "Nabz mascot, smug", phrase: "EZ Clap." },
+    { file: "mascot-extra.png", label: "Nabz mascot, confused", phrase: "Wait, what?" },
   ];
   let index = 0;
 
   function react() {
     index = (index + 1) % expressions.length;
     const next = expressions[index];
+    
+    // Update image
     mascot.src = `assets/${next.file}`;
     mascot.alt = next.label;
+    
+    // Update speech bubble
+    if (speech) {
+      speech.textContent = next.phrase;
+      speech.classList.add("visible");
+      
+      // Clear previous timeout to prevent overlapping
+      clearTimeout(window.speechTimeout);
+      window.speechTimeout = setTimeout(() => {
+        speech.classList.remove("visible");
+      }, 2000);
+    }
+
+    // Bounce animation
     mascot.classList.remove("bounce");
-    // restart animation
-    void mascot.offsetWidth;
+    void mascot.offsetWidth; // trigger reflow
     mascot.classList.add("bounce");
   }
 
@@ -122,9 +141,7 @@ function initMascotReactions() {
 
 initMascotReactions();
 
-// ---- Ambient background embers ----
-// Slow drifting glow particles in the brand palette. Skipped entirely for
-// prefers-reduced-motion, and paused when the tab isn't visible.
+// ---- Ambient background embers with Parallax ----
 function initEmbers() {
   const canvas = document.getElementById("bg-fx");
   if (!canvas || !canvas.getContext) return;
@@ -133,10 +150,16 @@ function initEmbers() {
   if (prefersReducedMotion) return;
 
   const ctx = canvas.getContext("2d");
-  const colors = ["245,171,61", "242,146,29", "201,106,18"];
+  const colors = ["245,171,61", "242,146,29", "201,106,18", "255,255,255"];
   let particles = [];
   let width, height, dpr;
   let running = true;
+  
+  // Mouse parallax
+  let mouseX = 0;
+  let mouseY = 0;
+  let targetMouseX = 0;
+  let targetMouseY = 0;
 
   function resize() {
     dpr = Math.min(window.devicePixelRatio || 1, 1.5);
@@ -153,18 +176,19 @@ function initEmbers() {
     return {
       x: Math.random() * width,
       y: height + Math.random() * 100,
-      r: 1 + Math.random() * 2.2,
-      speed: 0.15 + Math.random() * 0.35,
-      drift: (Math.random() - 0.5) * 0.3,
+      r: 1 + Math.random() * 3,
+      speed: 0.2 + Math.random() * 0.5,
+      drift: (Math.random() - 0.5) * 0.5,
       color: colors[Math.floor(Math.random() * colors.length)],
-      alpha: 0.15 + Math.random() * 0.35,
+      alpha: 0.1 + Math.random() * 0.4,
       flicker: Math.random() * Math.PI * 2,
+      parallaxFactor: 0.05 + Math.random() * 0.1
     };
   }
 
   function init() {
     resize();
-    const count = width < 480 ? 18 : width < 900 ? 28 : 38;
+    const count = width < 480 ? 25 : width < 900 ? 40 : 60;
     particles = Array.from({ length: count }, () => {
       const p = makeParticle();
       p.y = Math.random() * height;
@@ -176,6 +200,10 @@ function initEmbers() {
     if (!running) return;
     ctx.clearRect(0, 0, width, height);
 
+    // Smooth mouse parallax
+    mouseX += (targetMouseX - mouseX) * 0.05;
+    mouseY += (targetMouseY - mouseY) * 0.05;
+
     for (const p of particles) {
       p.y -= p.speed;
       p.x += p.drift;
@@ -186,9 +214,13 @@ function initEmbers() {
         p.y = height + 10;
       }
 
-      const flick = 0.7 + 0.3 * Math.sin(p.flicker);
+      // Apply parallax offset
+      const px = p.x + (mouseX * p.parallaxFactor);
+      const py = p.y + (mouseY * p.parallaxFactor);
+
+      const flick = 0.6 + 0.4 * Math.sin(p.flicker);
       ctx.beginPath();
-      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.arc(px, py, p.r, 0, Math.PI * 2);
       ctx.fillStyle = `rgba(${p.color}, ${(p.alpha * flick).toFixed(3)})`;
       ctx.fill();
     }
@@ -196,8 +228,12 @@ function initEmbers() {
     requestAnimationFrame(step);
   }
 
-  window.addEventListener("resize", () => {
-    resize();
+  window.addEventListener("resize", resize);
+
+  // Mouse move listener for parallax
+  window.addEventListener("mousemove", (e) => {
+    targetMouseX = (e.clientX - width / 2) * -1;
+    targetMouseY = (e.clientY - height / 2) * -1;
   });
 
   document.addEventListener("visibilitychange", () => {
